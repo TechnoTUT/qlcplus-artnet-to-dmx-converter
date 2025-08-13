@@ -5,7 +5,7 @@ This is a container for QLC+ software. It converts Art-Net to DMX signals. It is
 ### Docker/Podman
 Start the container:
 ```bash
-$ podman run -p 9999:9999 --name qlcplus ghcr.io/TechnoTUT/qlcplus-artnet-to-dmx-converter
+$ podman run -p 9999:9999 --privileged --name qlcplus ghcr.io/technotut/qlcplus-artnet-to-dmx-converter:main
 ```
 Connect to the Web UI at `http://<SERVER_IP>:9999`.  
 
