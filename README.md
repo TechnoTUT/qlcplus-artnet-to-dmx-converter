@@ -39,11 +39,19 @@ spec:
     spec:
       containers:
       - name: qlcplus
-        image: ghcr.io/TechnoTUT/qlcplus-artnet-to-dmx-converter
+        image: ghcr.io/technotut/qlcplus-artnet-to-dmx-converter:main
+        securityContext:
+          privileged: true
         ports:
         - containerPort: 7000
         - containerPort: 9999
-        restartPolicy: Always
+        volumeMounts:
+        - name: qlcplus-hostpath
+          mountPath: /dev/ttyUSB0
+      volumes:
+      - name: qlcplus-hostpath
+        hostPath:
+          path: /dev/ttyUSB0
 ```
 
 Create a service:
@@ -53,13 +61,10 @@ kind: Service
 metadata:
   name: qlcplus
   namespace: qlcplus
-  annotations:
-    external-dns.alpha.kubernetes.io/hostname: qlcplus.kube.technotut.net
 spec:
   selector:
     app: qlcplus
   type: LoadBalancer
-  loadBalancerIP: 10.33.31.1
   ports:
   - name: osc
     protocol: UDP
@@ -71,22 +76,24 @@ spec:
     targetPort: 9999
 ```
 
-Create a HostPath Volume
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: qlcplus-hostpath
-spec:
-  containers:
-  - name: qlcplus
-    securityContext:
-      privileged: true
-    volumeMounts:
-    - name: qlcplus-hostpath
-      mountPath: /dev/ttyUSB0
-  volumes:
-  - name: qlcplus-hostpath
-    hostPath:
-      path: /dev/ttyUSB0
+Apply the configuration:
+```bash
+$ kubectl apply -f <your-deployment-file>.yaml
+$ kubectl apply -f <your-service-file>.yaml
 ```
+
+Check the status of the deployment and service:
+```bash
+$ kubectl get deployment -n qlcplus
+$ kubectl get svc -n qlcplus
+```
+
+Access the Web UI at `http://<SERVICE_IP>`.
+
+## Setup
+On Web UI, open the "Configuration". Configure Universe 1.  
+- Input: [Art-Net] 10.xx.xx.xx
+- Output: [DMX USB] FT232R USB UART (S/N: ********)
+- Check "Passthrough" 
+
+After configuring, send Art-Net signals to server or loadbalancer.
